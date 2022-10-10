@@ -1,35 +1,66 @@
 from tkinter import LEFT
 import PySimpleGUI as sg
 import time
-import socketClient
+import socket
+import threading
 import json
 
-client = socketClient.socketClient()  
+class messagerUI:
 
-layoutColumn1 = [[sg.Column([],size=(1000,500),key='-MESSAGES-',element_justification=LEFT,background_color='red',scrollable=True,vertical_scroll_only=True)],
-          [sg.Input(key='-TEXT-',size=(80,20),font=(16),expand_x=True),sg.Button('Enviar',size=(20,1),font=(12))]
-          ]
 
-layoutFrame2 = [[sg.Text('Chats')]
-]
+    HOST, PORT = "localhost", 1234
 
-layout = [[sg.Column(layoutFrame2,vertical_alignment='top'),sg.Column( layoutColumn1)]]
+    def __init__(self):
+        
+        layoutColumn1 = [[sg.Column([],size=(1000,500),key='-MESSAGES-',element_justification=LEFT,background_color='red',scrollable=True,vertical_scroll_only=True)],
+                        [sg.Input(key='-TEXT-',size=(80,20),font=(16),expand_x=True),sg.Button('Enviar',size=(20,1),font=(12))]
+                        ]
 
-window = sg.Window('Mensagens', layout, finalize=True)
+        layoutFrame2 = [[sg.Text('Chats')]]
 
-while True:
-    event, values = window.read()
-    if event == sg.WIN_CLOSED or event == 'Cancel': # if user closes window or clicks cancel
-        client.closeConnection()
-        break 
-    elif event == 'Enviar':
-        message = {
-            "text": values['-TEXT-'],
-            "username" : "user1",
-            "date" : time.strftime('%Y-%b-%d %H:%M:%S', time.localtime())
-        }
-        client.sendMessage(json.dumps(message))
-        window.extend_layout(window['-MESSAGES-'], [[sg.Text('(' + time.strftime("%H:%M:%S", time.localtime()) + ') user 1: ' + values['-TEXT-'])]])
-        window['-MESSAGES-'].contents_changed()
-        window['-MESSAGES-'].Widget.canvas.yview_moveto(1.0)
-        window['-TEXT-'].update('')
+        layout = [[sg.Column(layoutFrame2,vertical_alignment='top'),sg.Column( layoutColumn1)]]
+
+        self.window = sg.Window('Mensagens', layout, finalize=True)
+
+        self.s = socket.socket() 
+        self.s.connect((self.HOST, self.PORT))
+        thread_recieve = threading.Thread(target=self.recieveMessage)
+        thread_recieve.daemon = True
+        thread_recieve.start()
+
+        while True:
+            event, values = self.window.read()
+            if event == sg.WIN_CLOSED or event == 'Cancel': # if user closes self.window or clicks cancel
+                self.closeConnection()
+                break 
+            elif event == 'Enviar':
+                message = {
+                    "text": values['-TEXT-'],
+                    "username" : "user1",
+                    "date" : time.strftime('%Y-%b-%d %H:%M:%S', time.localtime())
+                }
+                self.sendMessage(json.dumps(message))
+
+    def sendMessage(self,message):
+        self.s.sendall(bytes(message, "utf-8"))
+
+    def recieveMessage(self):
+        while True:
+            msg = json.loads(self.s.recv(1024))
+            print(msg)
+            self.window.extend_layout(self.window['-MESSAGES-'], [[sg.Text(f'({msg["date"]}) {msg["username"]}: {msg["text"]}')]])
+            self.window['-MESSAGES-'].contents_changed()
+            self.window['-MESSAGES-'].Widget.canvas.yview_moveto(1.0)
+            self.window['-TEXT-'].update('')
+
+
+    def closeConnection(self):
+        self.s.sendall(bytes("exit()", "utf-8"))
+        self.s.close()
+
+
+    
+if __name__ == "__main__":
+    messagerUI()
+
+        
