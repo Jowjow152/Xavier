@@ -38,7 +38,6 @@ def single_client(client):
     while True:
         msg = client.recv(BUFFERSIZE).strip()
         print(msg)
-        
         if msg == 'online()'.encode('utf8'):            
             real_clients_num, real_clients_name = get_clients()
             client.send(f'Online users {real_clients_num} : {real_clients_name}'.encode('utf8'))

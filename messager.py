@@ -1,16 +1,19 @@
 from tkinter import LEFT
+from turtle import color
 import PySimpleGUI as sg
 import time
 import socket
 import threading
 import json
+import keyboard
 
 class messagerUI:
 
-
     HOST, PORT = "localhost", 1234
 
-    def __init__(self):
+    def __init__(self, username):
+
+        self.username = username
         
         layoutColumn1 = [[sg.Column([],size=(1000,500),key='-MESSAGES-',element_justification=LEFT,background_color='red',scrollable=True,vertical_scroll_only=True)],
                         [sg.Input(key='-TEXT-',size=(80,20),font=(16),expand_x=True),sg.Button('Enviar',size=(20,1),font=(12))]
@@ -28,27 +31,34 @@ class messagerUI:
         thread_recieve.daemon = True
         thread_recieve.start()
 
+        keyboard.add_hotkey('enter', lambda: self.sendMessage())
+
         while True:
             event, values = self.window.read()
             if event == sg.WIN_CLOSED or event == 'Cancel': # if user closes self.window or clicks cancel
                 self.closeConnection()
                 break 
             elif event == 'Enviar':
-                message = {
-                    "text": values['-TEXT-'],
-                    "username" : "user1",
-                    "date" : time.strftime('%Y-%b-%d %H:%M:%S', time.localtime())
-                }
-                self.sendMessage(json.dumps(message))
+                
+                self.sendMessage()
 
-    def sendMessage(self,message):
-        self.s.sendall(bytes(message, "utf-8"))
+    def sendMessage(self):
+        text = self.window['-TEXT-'].get()
+        text = text.strip()
+        if text != '':
+            message = {
+                "text": text,
+                "username" : self.username,
+                "date" : time.strftime('%d/%m/%Y %H:%M', time.localtime())
+            }
+            message = json.dumps(message)
+            self.s.sendall(bytes(message, "utf-8"))
 
     def recieveMessage(self):
         while True:
             msg = json.loads(self.s.recv(1024))
             print(msg)
-            self.window.extend_layout(self.window['-MESSAGES-'], [[sg.Text(f'({msg["date"]}) {msg["username"]}: {msg["text"]}')]])
+            self.window.extend_layout(self.window['-MESSAGES-'], [[sg.Text(f'{msg["username"]}',text_color='#FFFFFF'), sg.Text(f'({msg["date"]})',text_color='#BDC3CB')],[sg.Text(f'{msg["text"]}')]])
             self.window['-MESSAGES-'].contents_changed()
             self.window['-MESSAGES-'].Widget.canvas.yview_moveto(1.0)
             self.window['-TEXT-'].update('')
@@ -61,6 +71,6 @@ class messagerUI:
 
     
 if __name__ == "__main__":
-    messagerUI()
+    messagerUI('Anonimo')
 
         
