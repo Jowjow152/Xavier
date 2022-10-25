@@ -4,7 +4,7 @@ conn = mysql.connector.connect(user='root', password='1234', host='127.0.0.1', d
 
 cursor = conn.cursor()
 
-cursor.execute("""INSERT INTO messages(Text, Date,Users_UserId) VALUES ('OI', '2022-10-21 00:00:00', 1)""")
+cursor.execute("""INSERT INTO messages(Text, Date,Users_UserId) VALUES ('Ruffles de Cheetos', '2022-10-30 00:00:00', 1)""")
 
 #cursor.execute("""INSERT INTO users(Username, Password) VALUES ('biruleibe', '1234')""")
 

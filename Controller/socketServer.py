@@ -11,7 +11,7 @@ def incomming_connections():
         
         Thread(target=single_client, args=(client,)).start()
 
-def broadcast_msg(msg, name=""):
+def broadcast_msg(msg):
 
     print(msg)
     for client in clients:
@@ -53,7 +53,7 @@ def single_client(client):
             break
         else:
             msg = json.loads(msg)
-            broadcast_msg(msg, clients[client] + ': ')
+            broadcast_msg(msg)
 
 if __name__ == "__main__":
 

@@ -7,7 +7,7 @@ import threading
 import json
 import keyboard
 
-class messagerUI:
+class MessagerUI:
 
     HOST, PORT = "localhost", 1234
 
@@ -71,6 +71,6 @@ class messagerUI:
 
     
 if __name__ == "__main__":
-    messagerUI('Anonimo')
+    MessagerUI('Anonimo')
 
         
