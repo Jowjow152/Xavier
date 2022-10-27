@@ -1,14 +1,33 @@
 import mysql.connector
 
-conn = mysql.connector.connect(user='root', password='1234', host='127.0.0.1', database='meioambiente')
+class DbConnector:
 
-cursor = conn.cursor()
+    user = "root"
+    password = "1234"
+    host = "127.0.0.1"
+    database = "meioambiente"
 
-cursor.execute("""INSERT INTO messages(Text, Date,Users_UserId) VALUES ('Ruffles de Cheetos', '2022-10-30 00:00:00', 1)""")
+    def __init__(self):
+        self.conn = mysql.connector.connect(user=self.user, password=self.password, host=self.host, database=self.database)
+        pass
 
-#cursor.execute("""INSERT INTO users(Username, Password) VALUES ('biruleibe', '1234')""")
+    def createMessage(self, text, user, date):
+        cursor = self.conn.cursor()
+        cursor.execute(f"""INSERT INTO messages(Text, Date,Users_UserId) VALUES ('{text}', '{date}', '{user}')""")
+        self.conn.commit()
 
-conn.commit()
+    def searchUser(self, username):
+        cursor = self.conn.cursor()
+        cursor.execute(f"""SELECT * FROM users WHERE users.username = '{username}'""")
+        result = cursor.fetchone()
+        return result
+        
 
-#Closing the connection
-conn.close()
+    def closeConnection(self):
+        self.conn.close()
+
+    
+if __name__ == "__main__":
+    conn = DbConnector()
+    conn.searchUser('a','')
+    conn.closeConnection()
